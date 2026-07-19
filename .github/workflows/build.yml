@@ -1,12 +1,21 @@
 #!/bin/bash
-# FreeFire IPA Patcher - Ngắn gọn
+# ONE SCRIPT: Extract + Patch + Package IPA
 
-unzip FreeFire.ipa -d ex
-cp -R ex/Payload/FreeFire.app Payload/
-rm -rf ex
+IPA="FreeFire.ipa"
+DYLIB="FreeFireHack.dylib"
 
-install_name_tool -add_rpath @executable_path/Frameworks Payload/FreeFire.app/FreeFire
-cp FreeFireHack.dylib Payload/FreeFire.app/Frameworks/
+[ ! -f "$IPA" ] && echo "Missing $IPA" && exit 1
+[ ! -f "$DYLIB" ] && echo "Missing $DYLIB" && exit 1
 
-zip -r FreeFire_Patched.ipa Payload/
-echo "Done! FreeFire_Patched.ipa"
+unzip -q "$IPA" -d tmp
+APP=$(find tmp -name "*.app" -type d|head -1)
+BIN="$APP/$(basename "$APP" .app)"
+
+mkdir -p "$APP/Frameworks"
+cp "$DYLIB" "$APP/Frameworks/"
+install_name_tool -add_rpath @executable_path/Frameworks "$BIN"
+ldid -S "$BIN" 2>/dev/null || true
+
+zip -qr patched.ipa tmp/
+rm -rf tmp
+echo "✅ patched.ipa ready!"
