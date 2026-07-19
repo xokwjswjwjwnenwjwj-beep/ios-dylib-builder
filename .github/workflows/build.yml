@@ -1,25 +1,12 @@
-name: Build iOS Dylib
+#!/bin/bash
+# FreeFire IPA Patcher - Ngắn gọn
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+unzip FreeFire.ipa -d ex
+cp -R ex/Payload/FreeFire.app Payload/
+rm -rf ex
 
-jobs:
-  build:
-    runs-on: macos-latest
+install_name_tool -add_rpath @executable_path/Frameworks Payload/FreeFire.app/FreeFire
+cp FreeFireHack.dylib Payload/FreeFire.app/Frameworks/
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Compile Dylib for iOS
-      run: |
-        clang -dynamiclib -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64 -miphoneos-version-min=14.0 -o libmylib_ios.dylib mylib.c
-        codesign --force --sign - libmylib_ios.dylib
-
-    - name: Upload Dylib Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios-dylib
-        path: libmylib_ios.dylib
+zip -r FreeFire_Patched.ipa Payload/
+echo "Done! FreeFire_Patched.ipa"
