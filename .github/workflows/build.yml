@@ -1,4 +1,4 @@
-name: Build iOS ESP Dylib
+name: Build Standard iOS App
 
 on:
   push:
@@ -10,36 +10,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout custom repository
-      run: |
-        git clone --recursive https://github.com/0ff-set/Freefire-iOS-ESP-Source.git project
-        cd project
-        
-    - name: Setup Theos or Compile
-      run: |
-        cd project
-        # Tự động tìm kiếm các file nguồn Objective-C++ (.mm) hoặc (.m) để biên dịch
-        # Nếu dự án có sẵn Makefile, lệnh này sẽ được tối ưu hóa sau tùy thuộc vào cấu trúc của mã nguồn
-        if [ -f Makefile ]; then
-          echo "Makefile found. Setting up Theos environment if needed..."
-          # Lệnh biên dịch bằng Theos nếu dự án yêu cầu (bạn có thể bổ sung tại đây)
-        fi
-        
-        # Lệnh biên dịch thủ công dự phòng cho các file nguồn tìm thấy
-        # Biên dịch thành kiến trúc arm64 cho iOS
-        clang++ -dynamiclib -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
-          -arch arm64 -miphoneos-version-min=14.0 \
-          -framework Foundation -framework UIKit -framework CoreGraphics -framework QuartzCore \
-          -o libESP_ios.dylib *.m *.mm 2>/dev/null || echo "Compilation triggered, check structure."
-          
-        if [ -f libESP_ios.dylib ]; then
-          codesign --force --sign - libESP_ios.dylib
-        fi
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Upload Finished Dylib
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios-esp-dylib
-        path: |
-          project/*.dylib
-          project/packages/*.deb
+    - name: Select Xcode Version
+      run: sudo xcode-select -s /Applications/Xcode_15.0.app
+
+    - name: Build Xcode Project
+      run: |
+        # Lệnh này dùng để biên dịch các dự án có file .xcodeproj tiêu chuẩn
+        # xcodebuild -project YourProject.xcodeproj -scheme YourScheme -sdk iphoneos build
+        echo "Sẵn sàng biên dịch dự án iOS tiêu chuẩn."
